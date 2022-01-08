@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/eriklupander/tradfri-go/model"
 	"github.com/eriklupander/tradfri-go/tradfri"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -110,11 +111,12 @@ func TurnOutletOff(deviceId int) error {
 }
 
 func SetOutletPowerState(deviceId, powerState int) error {
-	device, err := client.GetDevice(deviceId)
+	device, err := GetDevice(deviceId)
 
 	if err != nil {
 		return fmt.Errorf("error getting device state: %+v", err)
 	}
+
 	if device.Type != 3 {
 		return fmt.Errorf("device is not an outlet: %+v", err)
 	}
@@ -134,8 +136,26 @@ func SetOutletPowerState(deviceId, powerState int) error {
 	return nil
 }
 
-func IsOutletOn(deviceId int) bool {
+func GetDevice(deviceId int) (model.Device, error) {
+
 	device, err := client.GetDevice(deviceId)
+
+	if err != nil {
+		// attempt a re-connect.
+		fmt.Printf("error getting device: %+v", err)
+		fmt.Println("Got an error, attempting to reconnect")
+		IntitGateway()
+
+		device, err = client.GetDevice(deviceId)
+		if err != nil {
+			return model.Device{}, fmt.Errorf("error getting device state: %+v", err)
+		}
+	}
+	return device, nil
+}
+
+func IsOutletOn(deviceId int) bool {
+	device, err := GetDevice(deviceId)
 
 	if err != nil {
 		fmt.Printf("error getting outlet state: %+v\n", err)
