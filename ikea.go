@@ -95,7 +95,13 @@ func ListDevices() (string, error) {
 
 	list := ""
 	for _, device := range deviceList {
-		list += fmt.Sprintf("%v - %v - %v\n", device.Name, device.Type, device.DeviceId)
+		list += fmt.Sprintf("%v - %v - %v", device.Name, device.Type, device.DeviceId)
+		if device.Type == 3 {
+			list += fmt.Sprintf(" - State: %v\n", device.OutletControl[0].Power)
+		} else {
+			list += fmt.Sprintln()
+		}
+
 	}
 
 	fmt.Println(list)
