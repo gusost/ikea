@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"sort"
 	"time"
 
 	"github.com/eriklupander/tradfri-go/model"
@@ -88,20 +89,51 @@ func IntitGateway() error {
 
 func ListDevices() (string, error) {
 	deviceList, err := client.ListDevices()
+	// Sort by id
+	sort.Slice(deviceList, func(i, j int) bool { return deviceList[i].DeviceId < deviceList[j].DeviceId })
+
+	// Sort by type
+	sort.SliceStable(deviceList, func(i, j int) bool { return deviceList[i].Type < deviceList[j].Type })
+
+	// Sort by alive
+	sort.SliceStable(deviceList, func(i, j int) bool { return deviceList[i].Alive < deviceList[j].Alive })
 
 	if err != nil {
 		return "", err
 	}
 
-	list := ""
+	list := "  ID  -  Type  - State\n"
 	for _, device := range deviceList {
-		list += fmt.Sprintf("%v - %v - %v", device.Name, device.Type, device.DeviceId)
-		if device.Type == 3 {
-			list += fmt.Sprintf(" - State: %v\n", device.OutletControl[0].Power)
-		} else {
-			list += fmt.Sprintln()
+		list += fmt.Sprintf("%v - ", device.DeviceId)
+		switch device.Type {
+		case 0: // Remote
+			list += fmt.Sprintf("Remote - 🔋%v", printPercent(device.Metadata.Battery))
+		case 3: // Outlet
+			if device.OutletControl[0].Power == 0 {
+				list += fmt.Sprintf("%-15v", "Outlet - Off")
+			} else {
+				list += fmt.Sprintf("%-15v", "Outlet - On")
+			}
+		case 4: // Motion
+			list += fmt.Sprintf("Motion - 🔋%v", printPercent(device.Metadata.Battery))
+		case 6: // Repeater
+			list += fmt.Sprintf("%-15v", "Repeat -")
+		case 7: // Blind
+			list += fmt.Sprintf("Blind  - 📏%v - 🔋%v", printPercent(int(device.BlindControl[0].Position)), printPercent(device.Metadata.Battery))
+		default:
+			list += fmt.Sprintf("%v     ", device.Type)
 		}
+		// Alive
+		/* if device.Alive == 1 {
+			list += " - Alive"
+		} else {
+			list += " - Dead "
+		} */
 
+		// Time since seen
+		list += fmt.Sprintf(" - 👁 %-9v", time.Since(time.Unix(int64(device.LastSeen), 0)).Round(time.Second))
+		// Name
+		list += fmt.Sprintf(" - %v\n", device.Name)
 	}
 
 	fmt.Println(list)
@@ -109,37 +141,10 @@ func ListDevices() (string, error) {
 	return list, err
 }
 
-func TurnOutletOn(deviceId int) error {
-	return SetOutletPowerState(deviceId, 1)
-}
-func TurnOutletOff(deviceId int) error {
-	return SetOutletPowerState(deviceId, 0)
-}
-
-func SetOutletPowerState(deviceId, powerState int) error {
-	device, err := GetDevice(deviceId)
-
-	if err != nil {
-		return fmt.Errorf("error getting device state: %+v", err)
-	}
-
-	if device.Type != 3 {
-		return fmt.Errorf("device is not an outlet: %+v", err)
-	}
-
-	if device.OutletControl[0].Power != powerState {
-
-		_, err := client.PutDevicePower(deviceId, powerState)
-		if err != nil {
-			return fmt.Errorf("error setting device: %+v", err)
-		}
-		if powerState == 1 {
-			fmt.Println("Outlet turned on")
-		} else {
-			fmt.Println("Outlet turned off")
-		}
-	}
-	return nil
+func printPercent(percent int) string {
+	batteryString := fmt.Sprintf("%v%%", percent)
+	return fmt.Sprintf("%-4v", batteryString) // Left align, padding 4
+	// return fmt.Sprintf("%4v", batteryString) // Left align, padding 4
 }
 
 func GetDevice(deviceId int) (model.Device, error) {
@@ -158,21 +163,6 @@ func GetDevice(deviceId int) (model.Device, error) {
 		}
 	}
 	return device, nil
-}
-
-func IsOutletOn(deviceId int) bool {
-	device, err := GetDevice(deviceId)
-
-	if err != nil {
-		fmt.Printf("error getting outlet state: %+v\n", err)
-		return false
-	}
-	if device.Type != 3 {
-		fmt.Printf("device is not an outlet: %+v\n", err)
-		return false
-	}
-
-	return device.OutletControl[0].Power == 1
 }
 
 func performTokenExchange(gatewayAddress, clientID, psk string) {
