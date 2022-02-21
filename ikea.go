@@ -89,6 +89,9 @@ func IntitGateway() error {
 
 func ListDevices() (string, error) {
 	deviceList, err := client.ListDevices()
+	if err != nil {
+		return "", err
+	}
 	// Sort by id
 	sort.Slice(deviceList, func(i, j int) bool { return deviceList[i].DeviceId < deviceList[j].DeviceId })
 
@@ -97,10 +100,6 @@ func ListDevices() (string, error) {
 
 	// Sort by alive
 	sort.SliceStable(deviceList, func(i, j int) bool { return deviceList[i].Alive < deviceList[j].Alive })
-
-	if err != nil {
-		return "", err
-	}
 
 	list := "  ID  -  Type  - State\n"
 	for _, device := range deviceList {
@@ -163,6 +162,42 @@ func GetDevice(deviceId int) (model.Device, error) {
 		}
 	}
 	return device, nil
+}
+
+func GetDevices() ([]model.Device, error) {
+	deviceList, err := client.ListDevices()
+
+	if err != nil {
+		// attempt a re-connect.
+		fmt.Printf("error getting device list: %+v", err)
+		fmt.Println("Got an error, attempting to reconnect")
+		IntitGateway()
+
+		deviceList, err = client.ListDevices()
+
+		if err != nil {
+			return []model.Device{}, fmt.Errorf("error getting device state: %+v", err)
+		}
+	}
+	return deviceList, nil
+}
+
+func GetDevicesOfType(deviceType int) ([]model.Device, error) {
+	deviceList, err := GetDevices()
+	if err != nil {
+		return []model.Device{}, err
+	}
+
+	deviceListOfType := make([]model.Device, 0)
+
+	// Filter devices of the correct type.
+	for i := range deviceList {
+		if deviceList[i].Type == deviceType {
+			deviceListOfType = append(deviceListOfType, deviceList[i])
+		}
+	}
+
+	return deviceListOfType, nil
 }
 
 func performTokenExchange(gatewayAddress, clientID, psk string) {
