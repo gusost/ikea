@@ -17,11 +17,10 @@ func SetBlindPosition(deviceId int, position float32) error {
 
 	if device.BlindControl[0].Position != position {
 
-		result, err := client.PutDevicePositioning(deviceId, position)
+		_, err := client.PutDevicePositioning(deviceId, position)
 		if err != nil {
 			return fmt.Errorf("error setting blind: %+v", err)
 		}
-		fmt.Printf("%v - %v\n", device.Name, result.Msg)
 	}
 	return nil
 }
