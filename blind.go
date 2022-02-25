@@ -2,6 +2,7 @@ package ikea
 
 import (
 	"fmt"
+	"log"
 )
 
 func SetBlindPosition(deviceId int, position float32) error {
@@ -21,6 +22,7 @@ func SetBlindPosition(deviceId int, position float32) error {
 		if err != nil {
 			return fmt.Errorf("error setting blind: %+v", err)
 		}
+		log.Printf("%v set to %.2f\n", device.Name, position)
 	}
 	return nil
 }

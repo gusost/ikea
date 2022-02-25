@@ -152,7 +152,7 @@ func GetDevice(deviceId int) (model.Device, error) {
 
 	if err != nil {
 		// attempt a re-connect.
-		fmt.Printf("error getting device: %+v", err)
+		fmt.Printf("error getting device: %+v\n", err)
 		fmt.Println("Got an error, attempting to reconnect")
 		IntitGateway()
 
@@ -169,7 +169,7 @@ func GetDevices() ([]model.Device, error) {
 
 	if err != nil {
 		// attempt a re-connect.
-		fmt.Printf("error getting device list: %+v", err)
+		fmt.Printf("error getting device list: %+v\n", err)
 		fmt.Println("Got an error, attempting to reconnect")
 		IntitGateway()
 
