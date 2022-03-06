@@ -15,8 +15,8 @@ func SetBlindPosition(deviceId int, position float32) error {
 	if device.Type != 7 {
 		return fmt.Errorf("device is not a blind: %+v", err)
 	}
-
-	if device.BlindControl[0].Position != position {
+	// Sometimes blinds errouneously report position = 0 even though it's not
+	if device.BlindControl[0].Position != position || position == 0 {
 
 		_, err := client.PutDevicePositioning(deviceId, position)
 		if err != nil {
