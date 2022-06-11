@@ -88,6 +88,10 @@ func IntitGateway() error {
 }
 
 func ListDevices() (string, error) {
+	return ListDevicesWithDead(false)
+}
+
+func ListDevicesWithDead(includeDead bool) (string, error) {
 	deviceList, err := client.ListDevices()
 	if err != nil {
 		return "", err
@@ -103,6 +107,10 @@ func ListDevices() (string, error) {
 
 	list := "  ID  -  Type  - State\n"
 	for _, device := range deviceList {
+		// Hide dead devices
+		if !includeDead && device.Alive == 0 {
+			continue
+		}
 		list += fmt.Sprintf("%v - ", device.DeviceId)
 		switch device.Type {
 		case 0: // Remote
