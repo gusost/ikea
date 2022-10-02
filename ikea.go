@@ -148,6 +148,29 @@ func ListDevicesWithDead(includeDead bool) (string, error) {
 	return list, err
 }
 
+func ListDevicesBattery() (string, error) {
+	deviceList, err := client.ListDevices()
+	if err != nil {
+		return "", err
+	}
+	// Sort by id
+	sort.Slice(deviceList, func(i, j int) bool { return deviceList[i].Name < deviceList[j].Name })
+
+	list := "Name                         -  🔋\n"
+	for _, device := range deviceList {
+		// Hide dead devices
+		if device.Alive == 0 || (device.Type != 0 && device.Type != 4 && device.Type != 7) {
+			continue
+		}
+		list += fmt.Sprintf("%-28v - ", device.Name)
+		list += fmt.Sprintf("%v\n", printPercent(device.Metadata.Battery))
+	}
+
+	fmt.Println(list)
+
+	return list, err
+}
+
 func printPercent(percent int) string {
 	batteryString := fmt.Sprintf("%v%%", percent)
 	return fmt.Sprintf("%-4v", batteryString) // Left align, padding 4
