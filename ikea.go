@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
 	"sort"
 	"time"
@@ -138,7 +139,20 @@ func ListDevicesWithDead(includeDead bool) (string, error) {
 		} */
 
 		// Time since seen
-		list += fmt.Sprintf(" - 👁 %-9v", time.Since(time.Unix(int64(device.LastSeen), 0)).Round(time.Second))
+		since := time.Since(time.Unix(int64(device.LastSeen), 0))
+		if since > 365*24*time.Hour {
+			// print days since
+			list += " - 👁         "
+		} else if since > 7*24*time.Hour {
+			list += fmt.Sprintf(" - 👁 %-3v days", math.Round(since.Hours()/24))
+		} else if since > 24*time.Hour {
+			days := math.Round(since.Hours() / 24)
+			list += fmt.Sprintf(" - 👁 %-2v days %-2v hours", days, math.Round((since.Hours() - days*24)))
+		} else if since > 2*time.Hour {
+			list += fmt.Sprintf(" - 👁 %-2v hours", math.Round(since.Hours()))
+		} else {
+			list += " - 👁 Recently"
+		}
 		// Name
 		list += fmt.Sprintf(" - %v\n", device.Name)
 	}
