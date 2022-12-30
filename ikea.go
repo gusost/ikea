@@ -38,10 +38,10 @@ type TradfriConfig struct {
 
 var client *tradfri.Client
 
-func firstIntitGateway() error {
+func firstIntitGateway(keyPath string) error {
 	//err := fmt.Errorf("initial key exchange with gateway not implemented yet. It needs to be done to get a valid key associated with your client ID (key erroneously called pre shared in the TradfriConfig struct)")
 
-	ikeaKeyfile, err := ioutil.ReadFile("./ikea.json.key")
+	ikeaKeyfile, err := ioutil.ReadFile(keyPath)
 	if err != nil {
 		return fmt.Errorf("cannot read key file 'ikea.json.key': %s", err)
 	}
@@ -56,21 +56,25 @@ func firstIntitGateway() error {
 	return nil
 }
 
-func IntitGateway() error {
+var presentedConfigKeyPath string = ""
+var presentedKeyPath string = ""
 
+func IntitGateway(configKeyPath, keyPath string) error {
+	presentedConfigKeyPath = configKeyPath
+	presentedKeyPath = keyPath
 	level, _ := logrus.ParseLevel("error")
 	//level, _ := logrus.ParseLevel("info")
 	//level, _ := logrus.ParseLevel("trace")
 	logrus.SetLevel(level)
 
-	ikeaKeyfile, err := ioutil.ReadFile("./ikea.config.json.key")
+	ikeaKeyfile, err := ioutil.ReadFile(configKeyPath)
 	if err != nil {
-		err = firstIntitGateway()
+		err = firstIntitGateway(keyPath)
 		if err != nil {
 			return fmt.Errorf("cannot read key file 'ikea.config.json.key': %s", err)
 		}
 
-		ikeaKeyfile, err = ioutil.ReadFile("./ikea.config.json.key")
+		ikeaKeyfile, err = ioutil.ReadFile(configKeyPath)
 
 		if err != nil {
 			return fmt.Errorf("cannot read key file 'ikea.config.json.key': %s", err)
@@ -391,7 +395,7 @@ func GetDevice(deviceId int) (model.Device, error) {
 		// attempt a re-connect.
 		fmt.Printf("error getting device: %+v\n", err)
 		fmt.Println("Got an error, attempting to reconnect")
-		IntitGateway()
+		IntitGateway(presentedConfigKeyPath, presentedKeyPath)
 
 		device, err = client.GetDevice(deviceId)
 		if err != nil {
@@ -408,7 +412,7 @@ func GetDevices() ([]model.Device, error) {
 		// attempt a re-connect.
 		fmt.Printf("error getting device list: %+v\n", err)
 		fmt.Println("Got an error, attempting to reconnect")
-		IntitGateway()
+		IntitGateway(presentedConfigKeyPath, presentedKeyPath)
 
 		deviceList, err = client.ListDevices()
 
