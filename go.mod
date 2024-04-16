@@ -1,4 +1,4 @@
-module github.com/gusost/ikea
+module github.com/gusost/ikea/v2
 
 go 1.16
 
