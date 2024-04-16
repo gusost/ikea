@@ -392,8 +392,12 @@ func GetDevice(deviceId int) (model.Device, error) {
 	device, err := client.GetDevice(deviceId)
 
 	if err != nil {
-		// attempt a re-connect.
 		fmt.Printf("error getting device: %+v\n", err)
+		// if err starts with 'invalid character' return the error. It's probably a non existing device.
+		if strings.HasPrefix(err.Error(), "invalid character") {
+			return model.Device{}, err
+		}
+		// attempt a re-connect.
 		fmt.Println("Got an error, attempting to reconnect")
 		IntitGateway(presentedConfigKeyPath, presentedKeyPath)
 
