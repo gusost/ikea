@@ -3,7 +3,6 @@ package ikea
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math"
 	"os"
@@ -41,7 +40,7 @@ var client *tradfri.Client
 func firstIntitGateway(keyPath string) error {
 	//err := fmt.Errorf("initial key exchange with gateway not implemented yet. It needs to be done to get a valid key associated with your client ID (key erroneously called pre shared in the TradfriConfig struct)")
 
-	ikeaKeyfile, err := ioutil.ReadFile(keyPath)
+	ikeaKeyfile, err := os.ReadFile(keyPath)
 	if err != nil {
 		return fmt.Errorf("cannot read key file 'ikea.json.key': %s", err)
 	}
@@ -67,14 +66,14 @@ func IntitGateway(configKeyPath, keyPath string) error {
 	//level, _ := logrus.ParseLevel("trace")
 	logrus.SetLevel(level)
 
-	ikeaKeyfile, err := ioutil.ReadFile(configKeyPath)
+	ikeaKeyfile, err := os.ReadFile(configKeyPath)
 	if err != nil {
 		err = firstIntitGateway(keyPath)
 		if err != nil {
 			return fmt.Errorf("cannot read key file 'ikea.config.json.key': %s", err)
 		}
 
-		ikeaKeyfile, err = ioutil.ReadFile(configKeyPath)
+		ikeaKeyfile, err = os.ReadFile(configKeyPath)
 
 		if err != nil {
 			return fmt.Errorf("cannot read key file 'ikea.config.json.key': %s", err)

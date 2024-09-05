@@ -1,16 +1,19 @@
 package ikea
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
 func IsOutletOn(deviceId int) bool {
 	device, err := GetDevice(deviceId)
 
 	if err != nil {
-		fmt.Printf("error getting outlet state: %+v\n", err)
+		log.Printf("error getting outlet state: %+v\n", err)
 		return false
 	}
 	if device.Type != 3 {
-		fmt.Printf("device is not an outlet: %+v\n", err)
+		log.Printf("device is not an outlet: %+v\n", err)
 		return false
 	}
 
@@ -42,9 +45,9 @@ func SetOutletPowerState(deviceId, powerState int) error {
 			return fmt.Errorf("error setting device: %+v", err)
 		}
 		if powerState == 1 {
-			fmt.Printf("%v turned on\n", device.Name)
+			log.Printf("%v turned on\n", device.Name)
 		} else {
-			fmt.Printf("%v turned off\n", device.Name)
+			log.Printf("%v turned off\n", device.Name)
 		}
 	}
 	return nil
